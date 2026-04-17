@@ -15,6 +15,7 @@ is_typing = False
 last_key_time = 0
 block_end_time = 0
 delete_end_time = 0
+complete_end_time = 0
 TYPING_TIMEOUT = 0.4  # Seconds of silence before the build sound stops
 
 
@@ -33,7 +34,7 @@ monitor_thread.start()
 
 
 def on_press(key):
-    global is_typing, last_key_time, block_end_time, delete_end_time
+    global is_typing, last_key_time, block_end_time, delete_end_time, complete_end_time
 
     current_time = time.time()
     last_key_time = current_time
@@ -42,9 +43,14 @@ def on_press(key):
         # Enter or Period pressed
         if key == Key.enter or (hasattr(key, 'char') and key.char == '.'):
             sound_build.stop()
+            sound_delete.stop()
             is_typing = False
-            sound_complete.play()
-            block_end_time = current_time + sound_complete.get_length()
+            # Only play if the complete sound has finished
+            if current_time > complete_end_time:
+                complete_end_time = current_time + sound_complete.get_length()
+                sound_complete.play()
+                block_end_time = current_time + sound_complete.get_length()
+
 
         # Backspace or Delete pressed
         elif key in (Key.backspace, Key.delete):
